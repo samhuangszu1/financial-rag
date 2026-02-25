@@ -139,30 +139,33 @@ try:
     try:
         for r in results.resources:
             logging.info(f"Loading content from: {r.uri}")
-            logging.info(f"Resource type: {type(r)}, dir: {[x for x in dir(r) if not x.startswith('_')]}")
             
-            # Try different ways to get content
+            # Skip directory URIs (they can't be read as files)
+            if r.uri.startswith("viking://user/memories/"):
+                logging.info(f"Skipping directory: {r.uri}")
+                continue
+            
+            # MatchedContext has overview and abstract attributes
             content = None
-            if hasattr(r, 'content'):
+            if hasattr(r, 'overview') and r.overview:
+                content = r.overview
+            elif hasattr(r, 'abstract') and r.abstract:
+                content = r.abstract
+            elif hasattr(r, 'content'):
                 content = r.content
-            elif hasattr(r, 'text'):
-                content = r.text
-            elif hasattr(r, 'data'):
-                content = r.data
-            elif hasattr(client, 'read'):
-                content = client.read(r.uri)
-            elif hasattr(client, 'fetch'):
-                content = client.fetch(r.uri)
-            elif hasattr(client, 'load'):
-                content = client.load(r.uri)
             else:
-                # Log available methods
-                logging.info(f"Client methods: {[x for x in dir(client) if not x.startswith('_')]}")
-                content = str(r)  # Fallback to string representation
+                # Try to read from client as last resort
+                try:
+                    if hasattr(client, 'read'):
+                        content = client.read(r.uri)
+                except Exception as e:
+                    logging.warning(f"Failed to read {r.uri}: {e}")
+                    content = str(r)
             
-            context_blocks.append(
-                f"\n### 来源: {r.uri}\n{content}"
-            )
+            if content:
+                context_blocks.append(
+                    f"\n### 来源: {r.uri}\n{content}"
+                )
 
         context_text = "\n\n".join(context_blocks)
         logging.info(f"Context loaded, total length: {len(context_text)} characters")
