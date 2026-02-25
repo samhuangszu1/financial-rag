@@ -106,6 +106,8 @@ def main():
             return
 
         question = " ".join(sys.argv[1:])
+        print(f"问题: {question}")
+        print("-" * 50)
 
         ask_question(client, llm, question)
 
