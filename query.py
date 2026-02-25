@@ -116,6 +116,23 @@ try:
         except (EOFError, KeyboardInterrupt):
             print("\n退出程序")
             break
+        except UnicodeDecodeError:
+            # Try to handle encoding issue
+            print("检测到编码问题，尝试重新读取...")
+            try:
+                # Force reconfigure stdin and try again
+                import io
+                import sys
+                if hasattr(sys.stdin, 'buffer'):
+                    raw_input = sys.stdin.buffer.readline().decode('utf-8', errors='ignore').strip()
+                    question = raw_input
+                    print(f"重新读取到输入: {question}")
+                else:
+                    print("无法处理编码问题，请使用英文或检查终端设置")
+                    continue
+            except Exception:
+                print("编码问题无法解决，请使用英文或检查终端设置")
+                continue
         
         if not question:
             continue
