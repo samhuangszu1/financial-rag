@@ -78,7 +78,16 @@ try:
     # 可以是目录 / 单文件 / URL
     try:
         res = client.add_resource(path="./docs")
-        root_uri = res["root_uri"]
+        logging.info(f"add_resource returned: {res}")
+        logging.info(f"add_resource type: {type(res)}")
+        if hasattr(res, '__dict__'):
+            logging.info(f"add_resource attributes: {res.__dict__}")
+        if isinstance(res, dict):
+            root_uri = res.get("root_uri") or res.get("uri") or res.get("id")
+        else:
+            root_uri = getattr(res, "root_uri", None) or getattr(res, "uri", None) or getattr(res, "id", None)
+        if root_uri is None:
+            root_uri = "./docs"  # Fallback to the path itself
         logging.info(f"Document root URI: {root_uri}")
     except Exception as e:
         logging.error(f"Failed to add resource: {e}")
