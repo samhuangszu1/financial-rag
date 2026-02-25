@@ -2,6 +2,7 @@ import logging
 import sys
 import os
 import faulthandler
+import glob
 
 # Configure logging
 logging.basicConfig(
@@ -70,27 +71,29 @@ try:
         logging.error(f"Traceback: {traceback.format_exc()}")
         raise
 
-    logging.info("Adding document directory...")
+    logging.info("Adding document files...")
     # ====== 2️⃣ 添加文档目录 ======
-    # 可以是目录 / 单文件 / URL
-    try:
-        res = client.add_resource(path="./docs")
-        logging.info(f"add_resource returned: {res}")
-        logging.info(f"add_resource type: {type(res)}")
-        if hasattr(res, '__dict__'):
-            logging.info(f"add_resource attributes: {res.__dict__}")
-        if isinstance(res, dict):
-            root_uri = res.get("root_uri") or res.get("uri") or res.get("id")
-        else:
-            root_uri = getattr(res, "root_uri", None) or getattr(res, "uri", None) or getattr(res, "id", None)
-        if root_uri is None:
-            root_uri = "./docs"  # Fallback to the path itself
-        logging.info(f"Document root URI: {root_uri}")
-    except Exception as e:
-        logging.error(f"Failed to add resource: {e}")
-        import traceback
-        logging.error(f"Traceback: {traceback.format_exc()}")
-        raise
+    # 遍历docs目录下的文件并逐个添加
+    doc_files = glob.glob("./docs/*")
+    logging.info(f"Found {len(doc_files)} files in docs directory: {doc_files}")
+    
+    root_uris = []
+    for doc_file in doc_files:
+        if os.path.isfile(doc_file):
+            try:
+                res = client.add_resource(path=doc_file)
+                logging.info(f"add_resource({doc_file}) returned: {res}")
+                if isinstance(res, dict) and 'root_uri' in res:
+                    root_uris.append(res['root_uri'])
+            except Exception as e:
+                logging.warning(f"Failed to add {doc_file}: {e}")
+    
+    if not root_uris:
+        logging.warning("No documents were successfully added, using fallback")
+        root_uri = "./docs"
+    else:
+        root_uri = root_uris[0]
+    logging.info(f"Document root URIs: {root_uris}")
 
     print("文档根路径:", root_uri)
 
@@ -136,7 +139,27 @@ try:
     try:
         for r in results.resources:
             logging.info(f"Loading content from: {r.uri}")
-            content = client.get(r.uri)  # L2 原文
+            logging.info(f"Resource type: {type(r)}, dir: {[x for x in dir(r) if not x.startswith('_')]}")
+            
+            # Try different ways to get content
+            content = None
+            if hasattr(r, 'content'):
+                content = r.content
+            elif hasattr(r, 'text'):
+                content = r.text
+            elif hasattr(r, 'data'):
+                content = r.data
+            elif hasattr(client, 'read'):
+                content = client.read(r.uri)
+            elif hasattr(client, 'fetch'):
+                content = client.fetch(r.uri)
+            elif hasattr(client, 'load'):
+                content = client.load(r.uri)
+            else:
+                # Log available methods
+                logging.info(f"Client methods: {[x for x in dir(client) if not x.startswith('_')]}")
+                content = str(r)  # Fallback to string representation
+            
             context_blocks.append(
                 f"\n### 来源: {r.uri}\n{content}"
             )
