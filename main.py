@@ -3,9 +3,6 @@ import sys
 import os
 import faulthandler
 
-# Set environment variable
-os.environ['OPENVIKING_CONFIG_FILE'] = './conf/ov.conf'
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
