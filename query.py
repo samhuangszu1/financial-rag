@@ -25,7 +25,7 @@ def ask_question(client, llm, question):
     logging.info("Searching...")
     results = client.find(
         question,
-        limit=3
+        limit=5
     )
     logging.info(f"Found {len(results.resources)} resources")
     print(f"找到 {len(results.resources)} 个相关文档")
