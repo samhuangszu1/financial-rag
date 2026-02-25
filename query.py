@@ -2,6 +2,11 @@ import logging
 import sys
 import os
 
+# Set UTF-8 encoding for terminal
+os.environ['PYTHONIOENCODING'] = 'utf-8'
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
