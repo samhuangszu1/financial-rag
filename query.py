@@ -19,6 +19,7 @@ logging.basicConfig(
 def ask_question(client, llm, question):
     """Ask a single question and get answer."""
     logging.info(f"Question: {question}")
+    print("正在搜索相关内容...")
 
     # Perform semantic search
     logging.info("Searching...")
@@ -27,6 +28,7 @@ def ask_question(client, llm, question):
         limit=3
     )
     logging.info(f"Found {len(results.resources)} resources")
+    print(f"找到 {len(results.resources)} 个相关文档")
 
     print("\n命中资源:")
     for r in results.resources:
@@ -53,6 +55,7 @@ def ask_question(client, llm, question):
 
     context_text = "\n\n".join(context_blocks)
     logging.info(f"Context loaded: {len(context_text)} characters")
+    print(f"已加载 {len(context_text)} 字符的内容")
 
     # Create prompt
     prompt = f"""
@@ -70,11 +73,20 @@ def ask_question(client, llm, question):
 
     # Call LLM
     logging.info("Calling LLM...")
-    response = llm.chat.completions.create(
-        model="Pro/zai-org/GLM-4.7",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0
-    )
+    print("正在调用AI生成回答...")
+    try:
+        response = llm.chat.completions.create(
+            model="Pro/zai-org/GLM-4.7",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,
+            timeout=60  # Add timeout to prevent hanging
+        )
+        logging.info("LLM response received")
+        print("AI回答生成完成")
+    except Exception as e:
+        logging.error(f"LLM call failed: {e}")
+        print(f"AI调用失败: {e}")
+        return
 
     answer = response.choices[0].message.content
 
