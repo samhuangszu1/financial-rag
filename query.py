@@ -11,26 +11,8 @@ logging.basicConfig(
     ]
 )
 
-try:
-    logging.info("Starting query session...")
-    
-    # Import modules
-    import openviking as ov
-    from openai import OpenAI
-    logging.info("Modules imported")
-
-    # Initialize OpenViking with existing data
-    logging.info("Loading existing data...")
-    client = ov.OpenViking(path="./data")
-    client.initialize()
-    logging.info("OpenViking initialized")
-
-    # Get user question
-    if len(sys.argv) > 1:
-        question = " ".join(sys.argv[1:])
-    else:
-        question = input("\n请输入问题: ")
-    
+def ask_question(client, llm, question):
+    """Ask a single question and get answer."""
     logging.info(f"Question: {question}")
 
     # Perform semantic search
@@ -67,12 +49,6 @@ try:
     context_text = "\n\n".join(context_blocks)
     logging.info(f"Context loaded: {len(context_text)} characters")
 
-    # Initialize LLM
-    llm = OpenAI(
-        base_url="https://api.siliconflow.cn/v1",
-        api_key="sk-orwaghbrnozutrubfghzkjfrftautsmizhsasiruceejfstt"
-    )
-
     # Create prompt
     prompt = f"""
 你是一个严谨的知识问答助手。
@@ -102,9 +78,56 @@ try:
     print("="*50)
     print(answer)
 
+try:
+    logging.info("Starting query session...")
+    
+    # Import modules
+    import openviking as ov
+    from openai import OpenAI
+    logging.info("Modules imported")
+
+    # Initialize OpenViking with existing data
+    logging.info("Loading existing data...")
+    client = ov.OpenViking(path="./data")
+    client.initialize()
+    logging.info("OpenViking initialized")
+
+    # Initialize LLM
+    llm = OpenAI(
+        base_url="https://api.siliconflow.cn/v1",
+        api_key="sk-orwaghbrnozutrubfghzkjfrftautsmizhsasiruceejfstt"
+    )
+
+    print("\n" + "="*50)
+    print("金融RAG问答系统")
+    print("输入问题进行提问，输入 'quit' 或 'exit' 退出")
+    print("="*50)
+
+    # Interactive loop
+    while True:
+        print("\n" + "-"*50)
+        try:
+            question = input("请输入问题: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n退出程序")
+            break
+        
+        if not question:
+            continue
+        
+        if question.lower() in ('quit', 'exit', 'q', '退出'):
+            print("退出程序")
+            break
+        
+        try:
+            ask_question(client, llm, question)
+        except Exception as e:
+            logging.error(f"Error: {e}")
+            print(f"处理问题时出错: {e}")
+
     # Cleanup
     client.close()
-    logging.info("Done")
+    logging.info("Session ended")
 
 except Exception as e:
     logging.error(f"Error: {e}")
