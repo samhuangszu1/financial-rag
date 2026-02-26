@@ -13,7 +13,7 @@ logging.basicConfig(
     ]
 )
 
-def add_file_to_openviking(client, file_path, target_uri=None):
+def add_file_to_openviking(client, file_path, target_uri="viking://resources/contract"):
     """Add a single file to OpenViking."""
     try:
         logging.info(f"Adding file: {file_path}")
@@ -40,7 +40,7 @@ def add_file_to_openviking(client, file_path, target_uri=None):
         print(f"❌ 添加失败: {os.path.basename(file_path)} - {e}")
         return None
 
-def add_directory_to_openviking(client, dir_path, target_uri=None):
+def add_directory_to_openviking(client, dir_path, target_uri="viking://resources/contract"):
     """Add all files in a directory to OpenViking."""
     if not os.path.isdir(dir_path):
         print(f"❌ 目录不存在: {dir_path}")
@@ -68,47 +68,20 @@ def main():
         print("用法:")
         print("  python add_resources.py <文件路径>")
         print("  python add_resources.py <目录路径>")
-        print("  python add_resources.py --target-uri <URI> <文件路径>")
-        print("  python add_resources.py --target-uri <URI> <目录路径>")
+        print("  python add_resources.py <文件1> <文件2> <文件3>...")
         print("")
-        print("选项:")
-        print("  --target-uri <URI>    指定资源添加的目标URI命名空间")
+        print("说明:")
+        print("  所有文件将添加到固定命名空间: viking://resources/contract")
         print("")
         print("示例:")
         print("  python add_resources.py ./docs/contract.pdf")
         print("  python add_resources.py ./docs/")
-        print("  python add_resources.py --target-uri viking://my-collection ./docs/")
         print("  python add_resources.py ./docs/file1.pdf ./docs/file2.docx")
         return
 
-    # Parse arguments
-    target_uri = None
-    paths = []
-
-    i = 1
-    while i < len(sys.argv):
-        arg = sys.argv[i]
-        if arg == '--target-uri':
-            if i + 1 < len(sys.argv):
-                target_uri = sys.argv[i + 1]
-                i += 2
-            else:
-                print("❌ --target-uri 选项需要提供URI值")
-                return
-        else:
-            paths.append(arg)
-            i += 1
-
-    if not paths:
-        print("❌ 必须指定至少一个文件或目录路径")
-        return
-
-    if target_uri:
-        print(f"🎯 使用目标URI: {target_uri}")
-
     try:
         logging.info("Starting resource addition session...")
-
+        
         # Import modules
         import openviking as ov
         logging.info("OpenViking imported")
@@ -119,18 +92,20 @@ def main():
         client.initialize()
         logging.info("OpenViking initialized")
         print("✅ OpenViking 初始化完成")
+        print(f"🎯 固定目标URI: viking://resources/contract")
 
-        # Process all arguments
+        # Process all arguments (file/directory paths)
         all_uris = []
+        paths = sys.argv[1:]
 
         for path in paths:
             if os.path.isdir(path):
                 print(f"\n📁 处理目录: {path}")
-                uris = add_directory_to_openviking(client, path, target_uri)
+                uris = add_directory_to_openviking(client, path)
                 all_uris.extend(uris)
             elif os.path.isfile(path):
                 print(f"\n📄 处理文件: {path}")
-                uri = add_file_to_openviking(client, path, target_uri)
+                uri = add_file_to_openviking(client, path)
                 if uri:
                     all_uris.append(uri)
             else:
