@@ -13,19 +13,13 @@ logging.basicConfig(
     ]
 )
 
-def add_file_to_openviking(client, file_path, target_uri="viking://resources/contract"):
+def add_file_to_openviking(client, file_path):
     """Add a single file to OpenViking."""
     try:
         logging.info(f"Adding file: {file_path}")
         print(f"正在添加: {os.path.basename(file_path)}")
 
-        # Prepare add_resource parameters
-        add_params = {'path': file_path}
-        if target_uri:
-            add_params['target_uri'] = target_uri
-            logging.info(f"Using target_uri: {target_uri}")
-
-        res = client.add_resource(**add_params)
+        res = client.add_resource(path=file_path)
         logging.info(f"add_resource result: {res}")
 
         if isinstance(res, dict) and 'root_uri' in res:
@@ -40,7 +34,7 @@ def add_file_to_openviking(client, file_path, target_uri="viking://resources/con
         print(f"❌ 添加失败: {os.path.basename(file_path)} - {e}")
         return None
 
-def add_directory_to_openviking(client, dir_path, target_uri="viking://resources/contract"):
+def add_directory_to_openviking(client, dir_path):
     """Add all files in a directory to OpenViking."""
     if not os.path.isdir(dir_path):
         print(f"❌ 目录不存在: {dir_path}")
@@ -57,7 +51,7 @@ def add_directory_to_openviking(client, dir_path, target_uri="viking://resources
     print(f"找到 {len(files_only)} 个文件")
 
     for file_path in files_only:
-        uri = add_file_to_openviking(client, file_path, target_uri)
+        uri = add_file_to_openviking(client, file_path)
         if uri:
             added_uris.append(uri)
 
@@ -92,7 +86,6 @@ def main():
         client.initialize()
         logging.info("OpenViking initialized")
         print("✅ OpenViking 初始化完成")
-        print(f"🎯 固定目标URI: viking://resources/contract")
 
         # Process all arguments (file/directory paths)
         all_uris = []
