@@ -25,12 +25,21 @@ def add_file_to_openviking(client, file_path):
         )
         logging.info(f"add_resource result: {res}")
 
-        if isinstance(res, dict) and 'root_uri' in res:
-            print(f"✅ 成功添加: {os.path.basename(file_path)} -> {res['root_uri']}")
-            return res['root_uri']
-        else:
-            print(f"⚠️ 添加完成: {os.path.basename(file_path)} (无root_uri)")
-            return None
+        # Check for errors in the response
+        if isinstance(res, dict):
+            if res.get('status') == 'error':
+                errors = res.get('errors', [])
+                error_msg = '; '.join(errors) if errors else '未知错误'
+                print(f"❌ 解析失败: {os.path.basename(file_path)} - {error_msg}")
+                logging.error(f"Parse error for {file_path}: {error_msg}")
+                return None
+            elif 'root_uri' in res:
+                print(f"✅ 成功添加: {os.path.basename(file_path)} -> {res['root_uri']}")
+                return res['root_uri']
+        
+        # Fallback for unexpected response format
+        print(f"⚠️ 添加完成: {os.path.basename(file_path)} (无root_uri)")
+        return None
 
     except Exception as e:
         logging.error(f"Failed to add {file_path}: {e}")
