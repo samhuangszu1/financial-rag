@@ -92,18 +92,6 @@ def ask_contract_question(client, llm, question):
     print(answer)
 
 def main():
-    if len(sys.argv) < 2:
-        print("合同查询助手")
-        print("用法: python query_contracts.py '您的问题'")
-        print("")
-        print("示例:")
-        print("  python query_contracts.py '申购规则是什么？'")
-        print("  python query_contracts.py '投资策略如何？'")
-        print("  python query_contracts.py '风险披露在哪里？'")
-        print("")
-        print("说明: 此脚本专门查询 viking://resources/contract 命名空间下的合同文档")
-        return
-
     try:
         logging.info("Starting contract query session...")
 
@@ -124,12 +112,46 @@ def main():
             api_key="sk-orwaghbrnozutrubfghzkjfrftautsmizhsasiruceejfstt"
         )
 
-        # Get question from command line
-        question = " ".join(sys.argv[1:])
-        print(f"合同问题: {question}")
-        print("-" * 50)
+        print("\n" + "="*50)
+        print("合同智能问答系统")
+        print("输入问题进行合同查询，输入 'quit' 或 'exit' 退出")
+        print("="*50)
 
-        ask_contract_question(client, llm, question)
+        # Interactive loop for continuous querying
+        while True:
+            print("\n" + "-"*50)
+            try:
+                question = input("请输入合同问题: ").strip()
+            except (EOFError, KeyboardInterrupt):
+                print("\n退出合同问答系统")
+                break
+            except UnicodeDecodeError:
+                print("检测到编码问题，尝试重新读取...")
+                try:
+                    import sys
+                    if hasattr(sys.stdin, 'buffer'):
+                        raw_input = sys.stdin.buffer.readline().decode('utf-8', errors='ignore').strip()
+                        question = raw_input
+                        print(f"重新读取到输入: {question}")
+                    else:
+                        print("无法处理编码问题，请使用英文或检查终端设置")
+                        continue
+                except Exception:
+                    print("编码问题无法解决，请使用英文或检查终端设置")
+                    continue
+
+            if not question:
+                continue
+
+            if question.lower() in ('quit', 'exit', 'q', '退出'):
+                print("退出合同问答系统")
+                break
+
+            try:
+                ask_contract_question(client, llm, question)
+            except Exception as e:
+                logging.error(f"Error: {e}")
+                print(f"处理问题时出错: {e}")
 
         # Cleanup
         client.close()
