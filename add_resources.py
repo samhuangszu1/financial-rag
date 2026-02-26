@@ -19,7 +19,10 @@ def add_file_to_openviking(client, file_path):
         logging.info(f"Adding file: {file_path}")
         print(f"正在添加: {os.path.basename(file_path)}")
 
-        res = client.add_resource(path=file_path)
+        res = client.add_resource(
+            path=file_path,
+            target="viking://resources/contract"
+        )
         logging.info(f"add_resource result: {res}")
 
         if isinstance(res, dict) and 'root_uri' in res:
