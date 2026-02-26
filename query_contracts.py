@@ -18,7 +18,7 @@ def ask_contract_question(client, llm, question):
 
     # Perform semantic search within contract namespace
     logging.info("Searching contracts...")
-    results = client.find(
+    results = client.search(
         question,
         target_uri="viking://resources/contract",
         limit=5  # Get more results for contracts
