@@ -69,6 +69,7 @@ def main():
         print("")
         print("说明:")
         print("  所有文件将添加到固定命名空间: viking://resources/contract")
+        print("  使用 OpenViking 的 'target' 参数指定目标URI")
         print("")
         print("示例:")
         print("  python add_resources.py ./docs/contract.pdf")
